@@ -3569,6 +3569,11 @@ typedef struct {
   tor_addr_t OutboundBindAddressIPv4_;
   /** IPv6 address derived from OutboundBindAddress. */
   tor_addr_t OutboundBindAddressIPv6_;
+
+  config_line_t *OutboundBindAddressExit;
+  tor_addr_t OutboundBindAddressExitIPv4_;
+  tor_addr_t OutboundBindAddressExitIPv6_;
+
   /** Directory server only: which versions of
    * Tor should we tell users to run? */
   config_line_t *RecommendedVersions;

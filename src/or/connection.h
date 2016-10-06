@@ -86,7 +86,7 @@ void connection_expire_held_open(void);
 
 int connection_connect(connection_t *conn, const char *address,
                        const tor_addr_t *addr,
-                       uint16_t port, int *socket_error);
+                       uint16_t port, int *socket_error, int exit);
 
 #ifdef HAVE_SYS_UN_H
 

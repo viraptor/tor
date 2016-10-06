@@ -1850,7 +1850,8 @@ connection_connect_log_client_use_ip_version(const connection_t *conn)
  */
 int
 connection_connect(connection_t *conn, const char *address,
-                   const tor_addr_t *addr, uint16_t port, int *socket_error)
+                   const tor_addr_t *addr, uint16_t port, int *socket_error,
+                   int exit)
 {
   struct sockaddr_storage addrbuf;
   struct sockaddr_storage bind_addr_ss;
@@ -1871,12 +1872,22 @@ connection_connect(connection_t *conn, const char *address,
 
   if (!tor_addr_is_loopback(addr)) {
     const tor_addr_t *ext_addr = NULL;
-    if (protocol_family == AF_INET &&
-        !tor_addr_is_null(&options->OutboundBindAddressIPv4_))
-      ext_addr = &options->OutboundBindAddressIPv4_;
-    else if (protocol_family == AF_INET6 &&
-             !tor_addr_is_null(&options->OutboundBindAddressIPv6_))
-      ext_addr = &options->OutboundBindAddressIPv6_;
+    if (exit) {
+      if (protocol_family == AF_INET &&
+          !tor_addr_is_null(&options->OutboundBindAddressExitIPv4_))
+        ext_addr = &options->OutboundBindAddressExitIPv4_;
+      else if (protocol_family == AF_INET6 &&
+               !tor_addr_is_null(&options->OutboundBindAddressExitIPv6_))
+        ext_addr = &options->OutboundBindAddressExitIPv6_;
+    } else {
+      if (protocol_family == AF_INET &&
+          !tor_addr_is_null(&options->OutboundBindAddressIPv4_))
+        ext_addr = &options->OutboundBindAddressIPv4_;
+      else if (protocol_family == AF_INET6 &&
+               !tor_addr_is_null(&options->OutboundBindAddressIPv6_))
+        ext_addr = &options->OutboundBindAddressIPv6_;
+    }
+
     if (ext_addr) {
       memset(&bind_addr_ss, 0, sizeof(bind_addr_ss));
       bind_addr_len = tor_addr_to_sockaddr(ext_addr, 0,

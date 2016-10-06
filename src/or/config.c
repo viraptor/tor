@@ -347,6 +347,7 @@ static config_var_t option_vars_[] = {
   V(ORListenAddress,             LINELIST, NULL),
   VPORT(ORPort,                      LINELIST, NULL),
   V(OutboundBindAddress,         LINELIST,   NULL),
+  V(OutboundBindAddressExit,     LINELIST,   NULL),
 
   OBSOLETE("PathBiasDisableRate"),
   V(PathBiasCircThreshold,       INT,      "-1"),
@@ -660,6 +661,8 @@ static int options_init_logs(const or_options_t *old_options,
 static void init_libevent(const or_options_t *options);
 static int opt_streq(const char *s1, const char *s2);
 static int parse_outbound_addresses(or_options_t *options, int validate_only,
+                                    char **msg);
+static int parse_outbound_addresses_exit(or_options_t *options, int validate_only,
                                     char **msg);
 static void config_maybe_load_geoip_files_(const or_options_t *options,
                                            const or_options_t *old_options);
@@ -1796,6 +1799,12 @@ options_act(const or_options_t *old_options)
 
   if (parse_outbound_addresses(options, 0, &msg) < 0) {
     log_warn(LD_BUG, "Failed parsing outbound bind addresses: %s", msg);
+    tor_free(msg);
+    return -1;
+  }
+
+  if (parse_outbound_addresses_exit(options, 0, &msg) < 0) {
+    log_warn(LD_BUG, "Failed parsing outbound exit bind addresses: %s", msg);
     tor_free(msg);
     return -1;
   }
@@ -7876,6 +7885,55 @@ parse_outbound_addresses(or_options_t *options, int validate_only, char **msg)
       }
       found_v6 = 1;
       dst_addr = &options->OutboundBindAddressIPv6_;
+      break;
+    default:
+      if (msg)
+        tor_asprintf(msg, "Outbound bind address '%s' didn't parse.",
+                     lines->value);
+      return -1;
+    }
+    if (!validate_only)
+      tor_addr_copy(dst_addr, &addr);
+    lines = lines->next;
+  }
+  return 0;
+}
+
+static int
+parse_outbound_addresses_exit(or_options_t *options, int validate_only, char **msg)
+{
+  const config_line_t *lines = options->OutboundBindAddressExit;
+  int found_v4 = 0, found_v6 = 0;
+
+  if (!validate_only) {
+    memset(&options->OutboundBindAddressExitIPv4_, 0,
+           sizeof(options->OutboundBindAddressExitIPv4_));
+    memset(&options->OutboundBindAddressExitIPv6_, 0,
+           sizeof(options->OutboundBindAddressExitIPv6_));
+  }
+  while (lines) {
+    tor_addr_t addr, *dst_addr = NULL;
+    int af = tor_addr_parse(&addr, lines->value);
+    switch (af) {
+    case AF_INET:
+      if (found_v4) {
+        if (msg)
+          tor_asprintf(msg, "Multiple IPv4 outbound bind addresses "
+                       "configured: %s", lines->value);
+        return -1;
+      }
+      found_v4 = 1;
+      dst_addr = &options->OutboundBindAddressExitIPv4_;
+      break;
+    case AF_INET6:
+      if (found_v6) {
+        if (msg)
+          tor_asprintf(msg, "Multiple IPv6 outbound bind addresses "
+                       "configured: %s", lines->value);
+        return -1;
+      }
+      found_v6 = 1;
+      dst_addr = &options->OutboundBindAddressExitIPv6_;
       break;
     default:
       if (msg)

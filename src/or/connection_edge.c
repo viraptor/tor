@@ -3259,7 +3259,7 @@ connection_exit_connect(edge_connection_t *edge_conn)
 
     log_debug(LD_EXIT, "about to try connecting");
     result = connection_connect(conn, conn->address,
-                                addr, port, &socket_error);
+                                addr, port, &socket_error, 1);
 #ifdef HAVE_SYS_UN_H
   } else {
     /*

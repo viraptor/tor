@@ -1241,7 +1241,7 @@ connection_or_connect, (const tor_addr_t *_addr, uint16_t port,
   }
 
   switch (connection_connect(TO_CONN(conn), conn->base_.address,
-                             &addr, port, &socket_error)) {
+                             &addr, port, &socket_error, 0)) {
     case -1:
       /* We failed to establish a connection probably because of a local
        * error. No need to blame the guard in this case. Notify the networking

@@ -1207,7 +1207,7 @@ directory_initiate_command_rend(const tor_addr_port_t *or_addr_port,
     }
 
     switch (connection_connect(TO_CONN(conn), conn->base_.address, &addr,
-                               port, &socket_error)) {
+                               port, &socket_error, 0)) {
       case -1:
         connection_mark_for_close(TO_CONN(conn));
         return;

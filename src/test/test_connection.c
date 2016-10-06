@@ -145,7 +145,7 @@ test_conn_get_connection(uint8_t state, uint8_t type, uint8_t purpose)
   conn->port = TEST_CONN_PORT;
   mock_connection_connect_sockaddr_called = 0;
   in_progress = connection_connect(conn, TEST_CONN_ADDRESS_PORT, &addr,
-                                   TEST_CONN_PORT, &socket_err);
+                                   TEST_CONN_PORT, &socket_err, 0);
   tt_assert(mock_connection_connect_sockaddr_called == 1);
   tt_assert(!socket_err);
   tt_assert(in_progress == 0 || in_progress == 1);
